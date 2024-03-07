@@ -1,0 +1,164 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Entity;
+using System.Linq;
+using System.Net;
+using System.Web;
+using System.Web.Mvc;
+using ClassLibrary1;
+using Tienda_Virtual.Models;
+
+
+namespace Tienda_Virtual.Controllers
+{
+    public class UsuariosController : Controller
+    {
+        private MiTienda1Entities db = new MiTienda1Entities();
+
+        // GET: Usuarios/Index
+        public ActionResult Index()
+        {
+            // Redirecciona a la acción Login si el usuario no está autenticado
+            if (!User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Create", "Usuarios");
+            }
+            return View(db.Usuarios.ToList());
+        }
+
+        // GET: Usuarios/Login
+        public ActionResult Login()
+        {
+            // Aquí puedes retornar una vista de inicio de sesión vacía o con algún mensaje
+            return View();
+        }
+
+        // POST: Usuarios/Login
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Login(LoginViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var usuario = db.Usuarios.FirstOrDefault(u => u.Email == model.Email && u.Contraseña == model.Contraseña);
+                if (usuario != null)
+                {
+                    // Inicio de sesión exitoso, redireccionar a la página principal o a la página deseada.
+                    // Aquí podrías guardar el ID del usuario en la sesión si necesitas rastrear la sesión del usuario.
+                    return RedirectToAction("Index", "Home");
+                }
+                else
+                {
+                    ModelState.AddModelError("", "El correo electrónico o la contraseña son incorrectos.");
+                }
+            }
+
+            // Si llega a este punto, significa que el inicio de sesión ha fallado, así que volvemos a mostrar el formulario de inicio de sesión con los errores.
+            return View(model);
+        }
+        // GET: Usuarios/Details/5
+        public ActionResult Details(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            Usuarios usuarios = db.Usuarios.Find(id);
+            if (usuarios == null)
+            {
+                return HttpNotFound();
+            }
+            return View(usuarios);
+        }
+
+        // GET: Usuarios/Create
+        public ActionResult Create()
+        {
+            return View();
+        }
+
+        // POST: Usuarios/Create
+        // Para protegerse de ataques de publicación excesiva, habilite las propiedades específicas a las que quiere enlazarse. Para obtener 
+        // más detalles, vea https://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Create([Bind(Include = "ID_usuario,Nombre,Apellido,Email,Contraseña,Dirección,Teléfono,Rol")] Usuarios usuarios)
+        {
+            if (ModelState.IsValid)
+            {
+                db.Usuarios.Add(usuarios);
+                db.SaveChanges();
+                return RedirectToAction("Index");
+            }
+
+            return View(usuarios);
+        }
+
+        // GET: Usuarios/Edit/5
+        public ActionResult Edit(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            Usuarios usuarios = db.Usuarios.Find(id);
+            if (usuarios == null)
+            {
+                return HttpNotFound();
+            }
+            return View(usuarios);
+        }
+
+        // POST: Usuarios/Edit/5
+        // Para protegerse de ataques de publicación excesiva, habilite las propiedades específicas a las que quiere enlazarse. Para obtener 
+        // más detalles, vea https://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Edit([Bind(Include = "ID_usuario,Nombre,Apellido,Email,Contraseña,Dirección,Teléfono,Rol")] Usuarios usuarios)
+        {
+            if (ModelState.IsValid)
+            {
+                db.Entry(usuarios).State = EntityState.Modified;
+                db.SaveChanges();
+                return RedirectToAction("Index");
+            }
+            return View(usuarios);
+        }
+
+        // GET: Usuarios/Delete/5
+        public ActionResult Delete(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            Usuarios usuarios = db.Usuarios.Find(id);
+            if (usuarios == null)
+            {
+                return HttpNotFound();
+            }
+            return View(usuarios);
+        }
+
+        // POST: Usuarios/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public ActionResult DeleteConfirmed(int id)
+        {
+            Usuarios usuarios = db.Usuarios.Find(id);
+            db.Usuarios.Remove(usuarios);
+            db.SaveChanges();
+            return RedirectToAction("Index");
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+    }
+}
