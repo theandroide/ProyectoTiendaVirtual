@@ -1,0 +1,60 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Entity;
+using System.Linq;
+using System.Net;
+using System.Web;
+using System.Web.Mvc;
+using ClassLibrary1;
+using Tienda_Virtual.Models;
+namespace Tienda_Virtual.Controllers
+{
+    public class LoginController : Controller
+    {
+        // Contexto de la base de datos
+        private MiTiendaEntities1 db = new MiTiendaEntities1();
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Index(LoginViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                // Llama al procedimiento almacenado ValidarLogin
+                var resultado = db.Database.SqlQuery<int>("EXEC ValidarLogin @p0, @p1", model.Email, model.Contraseña).FirstOrDefault();
+
+                // Maneja el resultado del procedimiento almacenado
+                if (resultado == 1)
+                {
+                    // Inicio de sesión exitoso, obtener el ID_usuario desde la base de datos
+                    var usuario = db.Usuarios.FirstOrDefault(u => u.Email == model.Email);
+                    if (usuario != null)
+                    {
+                        // Guardar el ID_usuario en la Session
+                        Session["UsuarioId"] = usuario.ID_usuario;
+
+                        // Redirige a la página principal u otra página según necesites
+                        return RedirectToAction("Index", "Home");
+                    }
+                    else
+                    {
+                        // No se encontró el usuario, devuelve a la vista de inicio de sesión con un mensaje de error
+                        ViewBag.Error = "Error al obtener los datos del usuario";
+                        return View(model);
+                    }
+                }
+                else
+                {
+                    // Inicio de sesión fallido, devuelve a la vista de inicio de sesión con un mensaje de error
+                    ViewBag.Error = "Correo electrónico o contraseña incorrectos";
+                    return View(model);
+                }
+            }
+            else
+            {
+                // El modelo no es válido, vuelve a mostrar la vista de inicio de sesión
+                return View(model);
+            }
+        }
+    }
+}
